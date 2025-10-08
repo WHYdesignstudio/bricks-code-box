@@ -84,6 +84,10 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'type'=>'number','default'=>400,'unit'=>'px',
         'description' => esc_html__( 'Set to 0 for no limit', 'bricks-code-box' ),
       ];
+      $this->controls['full_height'] = [
+        'tab'=>'content','group'=>'settings','label'=>esc_html__( 'Show full code (no limit)', 'bricks-code-box' ),
+        'type'=>'checkbox','default'=>false,
+      ];
       $this->controls['show_filename'] = [
         'tab'=>'content','group'=>'settings','label'=>esc_html__( 'Show filename', 'bricks-code-box' ),
         'type'=>'checkbox','default'=>false,
@@ -112,7 +116,7 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
 
       // CSS nur einmal laden (Performance-Optimierung)
       if ( !wp_style_is('bcb-code-box-inline', 'enqueued') ) {
-        $css = '.bcb-code-box-wrapper{position:relative;display:block;width:100%;box-sizing:border-box;background:#f5f5f5;color:#333;overflow:auto;padding:1em;border-radius:8px;max-height:var(--bcb-max-height,400px)}.bcb-code-box-wrapper pre{margin:0;background:transparent!important;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}.bcb-code-box-wrapper code{font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:var(--bcb-font-size,14px);display:block;max-width:100%;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}.bcb-code-box-wrapper .copy-btn{position:absolute;top:8px;right:8px;background:transparent;color:#444;border:1px solid #444;padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:12px;z-index:9999;pointer-events:auto}.bcb-code-box-wrapper .copy-btn:hover{background:transparent;border-color:#666;color:#666}.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}';
+        $css = '.bcb-code-box-wrapper{position:relative;display:block;width:100%;box-sizing:border-box;background:#f5f5f5;color:#333;overflow:auto;padding:1em;border-radius:8px;max-height:var(--bcb-max-height,400px)}.bcb-code-box-wrapper.is-full{max-height:none;overflow:visible}.bcb-code-box-wrapper pre{margin:0;background:transparent!important;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}.bcb-code-box-wrapper code{font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:var(--bcb-font-size,14px);display:block;max-width:100%;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}.bcb-code-box-wrapper .copy-btn{position:absolute;top:8px;right:8px;background:transparent;color:#444;border:1px solid #444;padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:12px;z-index:9999;pointer-events:auto}.bcb-code-box-wrapper .copy-btn:hover{background:transparent;border-color:#666;color:#666}.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}';
         wp_register_style('bcb-code-box-inline', false);
         wp_enqueue_style('bcb-code-box-inline');
         wp_add_inline_style('bcb-code-box-inline', $css);
@@ -137,6 +141,7 @@ JS;
       $showCopy   = isset($settings['show_copy']) ? (bool)$settings['show_copy'] : true;
       $font_size  = isset($settings['font_size']) ? max(8, min(32, intval($settings['font_size']))) : 14;
       $max_height = isset($settings['max_height']) ? max(0, intval($settings['max_height'])) : 400;
+      $full_height = !empty($settings['full_height']);
       $show_filename = !empty($settings['show_filename']);
       $filename   = isset($settings['filename']) ? sanitize_text_field($settings['filename']) : '';
       
@@ -148,6 +153,7 @@ JS;
       if ( $lineNumbers ) { $root_classes[] = 'line-numbers'; }
       if ( $show_filename && !empty($filename) ) { $root_classes[] = 'has-filename'; }
 
+      if ( $full_height ) { $root_classes[] = 'is-full'; }
       $this->set_attribute('_root', 'class', $root_classes);
       $this->set_attribute('_root', 'style', '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;');
       $this->set_attribute('_root', 'data-lang', esc_attr($language));
