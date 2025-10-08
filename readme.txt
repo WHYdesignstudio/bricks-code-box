@@ -4,7 +4,7 @@ Tags: bricks, code, prism, syntax highlighting, copy button
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,10 +16,13 @@ Fügt dem Bricks Builder ein leistungsfähiges Code-Box-Element hinzu – mit Sy
 
 == Changelog ==
 
-= 1.0.4 – 2025-10-08 =
-* Neu: Toggle „Show full code (no limit)“ unter Settings
+= 1.0.5 – 2025-10-08 =
+* Neu: Toggle „Show full code (no limit)" unter Settings
 * Neu: Einstellbare Max-Höhe (px) mit 0 = unbegrenzt
 * Verbessert: CSS-Klasse `is-full` entfernt max-height/overflow
+
+= 1.0.4 – 2025-10-08 =
+* Test-Version für Update-System
 
 = 1.0.3 – 2025-10-08 =
 * Fix: Doppelte Klassen-Definition entfernt (keine Fatal Errors mehr)
