@@ -38,15 +38,18 @@ Ein **WordPress-Plugin** für den **Bricks Builder**, das ein **Code Box**-Eleme
 
 ## 📦 Installation
 
-### Variante A: ZIP (empfohlen)
-1. Latest Release von GitHub als ZIP herunterladen.
-2. In **WordPress Admin**: **Plugins → Installieren → Plugin hochladen**.
-3. Plugin aktivieren.
-4. In **Bricks Builder** das neue "Code Box"-Element verwenden.
-
-> **Wichtig:** Der Plugin-Ordner sollte `bricks-code-box/` heißen und die Hauptdatei `bricks-code-box.php` enthalten.
-
-### Variante B: Git-Clone
-```bash
-cd wp-content/plugins
-git clone https://github.com/DEINUSER/bricks-code-box.git bricks-code-box
+### Variante A: ZIP-Datei erstellen und hochladen (empfohlen)
+1. **Repository herunterladen:**
+   - GitHub: **Code → Download ZIP** (oder Repository klonen)
+   - Entpacken Sie die ZIP-Datei lokal
+2. **ZIP-Datei für WordPress erstellen:**
+   - Navigieren Sie zum entpackten Ordner (sollte `bricks-code-box-main` oder ähnlich heißen)
+   - **Wichtig:** Erstellen Sie eine ZIP-Datei aus dem **Inhalt** des Ordners
+   - Die ZIP muss beim Entpacken den Ordner `bricks-code-box/` ergeben
+   - Struktur sollte sein: `bricks-code-box/bricks-code-box.php`, `bricks-code-box/elements/`, etc.
+3. **In WordPress hochladen:**
+   - **WordPress Admin** → **Plugins → Installieren → Plugin hochladen**
+   - Ihre erstellte ZIP-Datei auswählen und hochladen
+4. **Plugin aktivieren:**
+   - Plugin aktivieren
+   - In **Bricks Builder** das neue "Code Box"-Element verwenden
