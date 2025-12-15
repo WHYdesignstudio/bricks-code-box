@@ -4,7 +4,7 @@ Tags: bricks, code, prism, syntax highlighting, copy button
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,9 @@ Ein leichtgewichtiges Bricks-Addon, das ein Code-Box-Element mit Prism.js, Copy-
 Fügt dem Bricks Builder ein leistungsfähiges Code-Box-Element hinzu – mit Syntax-Highlighting (Prism.js), Copy-Button, Zeilennummern, Dark/Light-Themes, optionalem Dateinamen und mehr.
 
 == Changelog ==
+
+= 1.0.6 – 2025-10-08 =
+* Fix: PHP snippets are now displayed (code no longer stripped)
 
 = 1.0.5 – 2025-10-08 =
 * Neu: Toggle „Show full code (no limit)" unter Settings
