@@ -135,7 +135,8 @@ JS;
 
     public function render() {
       $settings   = $this->settings;
-      $code       = isset($settings['code']) ? wp_kses_post($settings['code']) : '';
+      // Keep code exactly as entered; escaping happens at output (esc_html / esc_textarea)
+      $code       = isset($settings['code']) ? (string) $settings['code'] : '';
       $language   = isset($settings['language']) ? sanitize_text_field($settings['language']) : 'markup';
       $lineNumbers= !empty($settings['line_numbers']);
       $showCopy   = isset($settings['show_copy']) ? (bool)$settings['show_copy'] : true;
