@@ -83,6 +83,56 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'tab'=>'content','group'=>'labels','label'=>esc_html__( 'Copied label (EN)', 'bricks-code-box' ),
         'type'=>'text','default'=>'✅ Copied!',
       ];
+      // Copy button style
+      $this->controls['copy_btn_position'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button position', 'bricks-code-box' ),
+        'type'  => 'select',
+        'options' => [
+          'right' => esc_html__( 'Top right', 'bricks-code-box' ),
+          'left'  => esc_html__( 'Top left', 'bricks-code-box' ),
+        ],
+        'default' => 'right',
+      ];
+      $this->controls['copy_btn_offset_y'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button offset (top, px)', 'bricks-code-box' ),
+        'type'  => 'number',
+        'default' => 8,
+        'unit'  => 'px',
+      ];
+      $this->controls['copy_btn_bg'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button background', 'bricks-code-box' ),
+        'type'  => 'color',
+        'default' => '',
+        'description' => esc_html__( 'Leave empty for transparent background.', 'bricks-code-box' ),
+      ];
+      $this->controls['copy_btn_color'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button text color', 'bricks-code-box' ),
+        'type'  => 'color',
+        'default' => '',
+      ];
+      $this->controls['copy_btn_border_color'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button border color', 'bricks-code-box' ),
+        'type'  => 'color',
+        'default' => '',
+      ];
+      $this->controls['copy_btn_font_size'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button font size (px)', 'bricks-code-box' ),
+        'type'  => 'number',
+        'default' => 12,
+        'unit'  => 'px',
+      ];
       $this->controls['font_size'] = [
         'tab'=>'style','group'=>'style','label'=>esc_html__( 'Font size (px)', 'bricks-code-box' ),
         'type'=>'number','default'=>14,'unit'=>'px',
@@ -131,8 +181,9 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
           .'.bcb-code-box-wrapper.is-full{max-height:none;overflow:visible}'
           .'.bcb-code-box-wrapper pre{margin:0;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
           .'.bcb-code-box-wrapper code{font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:var(--bcb-font-size,14px);display:block;max-width:100%;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
-          .'.bcb-code-box-wrapper .copy-btn{position:absolute;top:8px;right:8px;background:transparent;color:#444;border:1px solid #444;padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:12px;z-index:9999;pointer-events:auto}'
-          .'.bcb-code-box-wrapper .copy-btn:hover{background:transparent;border-color:#666;color:#666}'
+          .'.bcb-code-box-wrapper .copy-btn{position:absolute;top:var(--bcb-btn-top,8px);right:8px;left:auto;background:var(--bcb-btn-bg,transparent);color:var(--bcb-btn-color,#444);border:1px solid var(--bcb-btn-border-color,#444);padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:var(--bcb-btn-font-size,12px);z-index:9999;pointer-events:auto}'
+          .'.bcb-code-box-wrapper.copy-btn-left .copy-btn{right:auto;left:8px}'
+          .'.bcb-code-box-wrapper .copy-btn:hover{background:var(--bcb-btn-bg-hover,transparent);border-color:var(--bcb-btn-border-color-hover,#666);color:var(--bcb-btn-color-hover,#666)}'
           .'.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}'
           .'.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}'
           // Custom background: einfarbiger Block, Prism-Decor (BG, Shadow, Border) wird neutralisiert
@@ -185,7 +236,34 @@ JS;
         $root_classes[] = 'has-custom-bg';
       }
       
+      // Copy button style variables
+      $copy_btn_position = isset($settings['copy_btn_position']) ? sanitize_text_field($settings['copy_btn_position']) : 'right';
+      $copy_btn_offset_y = isset($settings['copy_btn_offset_y']) ? max(0, intval($settings['copy_btn_offset_y'])) : 8;
+      $copy_btn_font_size = isset($settings['copy_btn_font_size']) ? max(8, min(24, intval($settings['copy_btn_font_size']))) : 12;
+      $copy_btn_bg = isset($settings['copy_btn_bg']) ? sanitize_text_field($settings['copy_btn_bg']) : '';
+      $copy_btn_color = isset($settings['copy_btn_color']) ? sanitize_text_field($settings['copy_btn_color']) : '';
+      $copy_btn_border = isset($settings['copy_btn_border_color']) ? sanitize_text_field($settings['copy_btn_border_color']) : '';
+
+      if ( $copy_btn_position === 'left' ) {
+        $root_classes[] = 'copy-btn-left';
+      }
+      
       $style_attr = '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;';
+      $style_attr .= ' --bcb-btn-top: ' . esc_attr($copy_btn_offset_y) . 'px;';
+      $style_attr .= ' --bcb-btn-font-size: ' . esc_attr($copy_btn_font_size) . 'px;';
+      if ( $copy_btn_bg !== '' ) {
+        $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_bg) . ';';
+        // leichte Hover-Variante andeuten (kann der User bei Bedarf überschreiben)
+        $style_attr .= ' --bcb-btn-bg-hover: ' . esc_attr($copy_btn_bg) . ';';
+      }
+      if ( $copy_btn_color !== '' ) {
+        $style_attr .= ' --bcb-btn-color: ' . esc_attr($copy_btn_color) . ';';
+        $style_attr .= ' --bcb-btn-color-hover: ' . esc_attr($copy_btn_color) . ';';
+      }
+      if ( $copy_btn_border !== '' ) {
+        $style_attr .= ' --bcb-btn-border-color: ' . esc_attr($copy_btn_border) . ';';
+        $style_attr .= ' --bcb-btn-border-color-hover: ' . esc_attr($copy_btn_border) . ';';
+      }
       if ( $has_custom_bg ) {
         $style_attr .= ' --bcb-bg-color: ' . esc_attr($bg_color) . ';';
       }
