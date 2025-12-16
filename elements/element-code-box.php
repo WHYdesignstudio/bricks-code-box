@@ -37,25 +37,6 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         ],
         'default' => 'markup',
       ];
-      $this->controls['bg_style'] = [
-        'tab' => 'content',
-        'group' => 'settings',
-        'label' => esc_html__( 'Background style', 'bricks-code-box' ),
-        'type' => 'select',
-        'options' => [
-          'prism'      => esc_html__( 'Prism theme background', 'bricks-code-box' ),
-          'custom'     => esc_html__( 'Custom color', 'bricks-code-box' ),
-          'transparent'=> esc_html__( 'Use Bricks / page background', 'bricks-code-box' ),
-        ],
-        'default' => 'prism',
-        'description' => esc_html__( 'Choose if the background comes from Prism, a custom color, or stays transparent.', 'bricks-code-box' ),
-      ];
-      $this->controls['bg_color'] = [
-        'tab' => 'content', 'group' => 'settings', 'label' => esc_html__( 'Background color', 'bricks-code-box' ),
-        'type' => 'color',
-        'default' => '#f5f5f5',
-        'required' => ['bg_style', '=', 'custom'],
-      ];
       $this->controls['theme'] = [
         'tab' => 'content', 'group' => 'settings', 'label' => esc_html__( 'Prism theme', 'bricks-code-box' ),
         'type' => 'select',
@@ -69,7 +50,14 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
           'prism-funky' => 'Funky',
         ],
         'default' => 'prism',
-        'required' => ['bg_style', '=', 'prism'],
+      ];
+      $this->controls['background_color'] = [
+        'tab' => 'content',
+        'group' => 'settings',
+        'label' => esc_html__( 'Background color (optional)', 'bricks-code-box' ),
+        'type' => 'color',
+        'default' => '',
+        'description' => esc_html__( 'Leave empty to use the Prism theme background. If set, this color is used for the whole code block.', 'bricks-code-box' ),
       ];
       $this->controls['line_numbers'] = [
         'tab' => 'content','group' => 'settings','label' => esc_html__( 'Line numbers', 'bricks-code-box' ),
@@ -136,10 +124,9 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
 
       // CSS nur einmal laden (Performance-Optimierung)
       if ( !wp_style_is('bcb-code-box-inline', 'enqueued') ) {
-        // Layout & UX only – background/colors come from:
-        // - Prism theme (bg_style = prism)
-        // - Custom color (bg_style = custom)
-        // - Transparent / Bricks background (bg_style = transparent)
+        // Layout & UX only – background/colors come entweder von:
+        // - Prism theme (Standard)
+        // - Einer optionalen Custom-Farbe (background_color)
         $css = '.bcb-code-box-wrapper{position:relative;display:block;width:100%;box-sizing:border-box;overflow:auto;padding:1em;border-radius:8px;max-height:var(--bcb-max-height,400px)}'
           .'.bcb-code-box-wrapper.is-full{max-height:none;overflow:visible}'
           .'.bcb-code-box-wrapper pre{margin:0;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
@@ -148,13 +135,10 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
           .'.bcb-code-box-wrapper .copy-btn:hover{background:transparent;border-color:#666;color:#666}'
           .'.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}'
           .'.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}'
-          // Custom background mode: solid block, hide Prism decorations
+          // Custom background: einfarbiger Block, Prism-Decor (BG, Shadow, Border) wird neutralisiert
           .'.bcb-code-box-wrapper.has-custom-bg,.bcb-code-box-wrapper.has-custom-bg pre[class*="language-"],.bcb-code-box-wrapper.has-custom-bg code[class*="language-"]{background:var(--bcb-bg-color,#f5f5f5)!important;background-image:none!important;box-shadow:none!important;border:none!important;outline:none!important}'
           .'.bcb-code-box-wrapper.has-custom-bg.line-numbers .line-numbers-rows > span:before{background:transparent!important;border:none!important;box-shadow:none!important}'
-          .'.bcb-code-box-wrapper.has-custom-bg.line-numbers pre[class*="language-"]{padding-left:3.8em}'
-          // Transparent mode: no background from wrapper/Prism, only Bricks / page bg
-          .'.bcb-code-box-wrapper.has-transparent-bg,.bcb-code-box-wrapper.has-transparent-bg pre[class*="language-"],.bcb-code-box-wrapper.has-transparent-bg code[class*="language-"]{background:transparent!important;background-image:none!important;box-shadow:none!important;border:none!important;outline:none!important}'
-          .'.bcb-code-box-wrapper.has-transparent-bg.line-numbers .line-numbers-rows > span:before{background:transparent!important;border:none!important;box-shadow:none!important}';
+          .'.bcb-code-box-wrapper.has-custom-bg.line-numbers pre[class*="language-"]{padding-left:3.8em}';
         wp_register_style('bcb-code-box-inline', false);
         wp_enqueue_style('bcb-code-box-inline');
         wp_add_inline_style('bcb-code-box-inline', $css);
@@ -188,27 +172,21 @@ JS;
       $allowed_languages = ['markup', 'javascript', 'php', 'css', 'java', 'python', 'sql', 'bash'];
       $language = in_array($language, $allowed_languages) ? $language : 'markup';
 
-      $bg_style = isset($settings['bg_style']) ? sanitize_text_field($settings['bg_style']) : 'prism';
-      $allowed_bg_styles = ['prism','custom','transparent'];
-      if ( !in_array($bg_style, $allowed_bg_styles, true) ) {
-        $bg_style = 'prism';
-      }
-      // Bricks kann hier leeren String liefern – dann auf Default zurückfallen
-      $bg_color_raw = $settings['bg_color'] ?? '#f5f5f5';
-      if (!is_string($bg_color_raw) || $bg_color_raw === '') {
-        $bg_color_raw = '#f5f5f5';
-      }
-      $bg_color = sanitize_text_field($bg_color_raw);
-      
       $root_classes = [ 'bcb-code-box-wrapper' ];
       if ( $lineNumbers ) { $root_classes[] = 'line-numbers'; }
       if ( $show_filename && !empty($filename) ) { $root_classes[] = 'has-filename'; }
       if ( $full_height ) { $root_classes[] = 'is-full'; }
-      if ( $bg_style === 'custom' ) { $root_classes[] = 'has-custom-bg'; }
-      if ( $bg_style === 'transparent' ) { $root_classes[] = 'has-transparent-bg'; }
+      
+      // Optional custom background color: if set, we use it for the whole block
+      $bg_color_raw = $settings['background_color'] ?? '';
+      $has_custom_bg = is_string($bg_color_raw) && $bg_color_raw !== '';
+      $bg_color = $has_custom_bg ? sanitize_text_field($bg_color_raw) : '';
+      if ( $has_custom_bg ) {
+        $root_classes[] = 'has-custom-bg';
+      }
       
       $style_attr = '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;';
-      if ( $bg_style === 'custom' ) {
+      if ( $has_custom_bg ) {
         $style_attr .= ' --bcb-bg-color: ' . esc_attr($bg_color) . ';';
       }
       
