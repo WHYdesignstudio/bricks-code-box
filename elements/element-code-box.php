@@ -103,6 +103,14 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'default' => 8,
         'unit'  => 'px',
       ];
+      $this->controls['copy_btn_offset_x'] = [
+        'tab'   => 'style',
+        'group' => 'style',
+        'label' => esc_html__( 'Copy button offset (side, px)', 'bricks-code-box' ),
+        'type'  => 'number',
+        'default' => 8,
+        'unit'  => 'px',
+      ];
       $this->controls['copy_btn_bg'] = [
         'tab'   => 'style',
         'group' => 'style',
@@ -181,8 +189,8 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
           .'.bcb-code-box-wrapper.is-full{max-height:none;overflow:visible}'
           .'.bcb-code-box-wrapper pre{margin:0;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
           .'.bcb-code-box-wrapper code{font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:var(--bcb-font-size,14px);display:block;max-width:100%;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
-          .'.bcb-code-box-wrapper .copy-btn{position:absolute;top:var(--bcb-btn-top,8px);right:8px;left:auto;background:var(--bcb-btn-bg,transparent);color:var(--bcb-btn-color,#444);border:1px solid var(--bcb-btn-border-color,#444);padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:var(--bcb-btn-font-size,12px);z-index:9999;pointer-events:auto}'
-          .'.bcb-code-box-wrapper.copy-btn-left .copy-btn{right:auto;left:8px}'
+          .'.bcb-code-box-wrapper .copy-btn{position:absolute;top:var(--bcb-btn-top,8px);right:var(--bcb-btn-offset-x,8px);left:auto;background:var(--bcb-btn-bg,transparent);color:var(--bcb-btn-color,#444);border:1px solid var(--bcb-btn-border-color,#444);padding:4px 10px;border-radius:4px;cursor:pointer!important;font-size:var(--bcb-btn-font-size,12px);z-index:9999;pointer-events:auto}'
+          .'.bcb-code-box-wrapper.copy-btn-left .copy-btn{right:auto;left:var(--bcb-btn-offset-x,8px)}'
           .'.bcb-code-box-wrapper .copy-btn:hover{background:var(--bcb-btn-bg-hover,transparent);border-color:var(--bcb-btn-border-color-hover,#666);color:var(--bcb-btn-color-hover,#666)}'
           .'.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}'
           .'.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}'
@@ -239,10 +247,17 @@ JS;
       // Copy button style variables
       $copy_btn_position = isset($settings['copy_btn_position']) ? sanitize_text_field($settings['copy_btn_position']) : 'right';
       $copy_btn_offset_y = isset($settings['copy_btn_offset_y']) ? max(0, intval($settings['copy_btn_offset_y'])) : 8;
+      $copy_btn_offset_x = isset($settings['copy_btn_offset_x']) ? max(0, intval($settings['copy_btn_offset_x'])) : 8;
       $copy_btn_font_size = isset($settings['copy_btn_font_size']) ? max(8, min(24, intval($settings['copy_btn_font_size']))) : 12;
-      $copy_btn_bg = isset($settings['copy_btn_bg']) ? sanitize_text_field($settings['copy_btn_bg']) : '';
-      $copy_btn_color = isset($settings['copy_btn_color']) ? sanitize_text_field($settings['copy_btn_color']) : '';
-      $copy_btn_border = isset($settings['copy_btn_border_color']) ? sanitize_text_field($settings['copy_btn_border_color']) : '';
+
+      // Bricks color controls können Arrays liefern – wir nehmen einfach den ersten String-Wert
+      $copy_btn_bg_raw    = $settings['copy_btn_bg'] ?? '';
+      $copy_btn_color_raw = $settings['copy_btn_color'] ?? '';
+      $copy_btn_border_raw= $settings['copy_btn_border_color'] ?? '';
+
+      $copy_btn_bg = is_array($copy_btn_bg_raw) ? (string) reset($copy_btn_bg_raw) : (string) $copy_btn_bg_raw;
+      $copy_btn_color = is_array($copy_btn_color_raw) ? (string) reset($copy_btn_color_raw) : (string) $copy_btn_color_raw;
+      $copy_btn_border = is_array($copy_btn_border_raw) ? (string) reset($copy_btn_border_raw) : (string) $copy_btn_border_raw;
 
       if ( $copy_btn_position === 'left' ) {
         $root_classes[] = 'copy-btn-left';
@@ -250,6 +265,7 @@ JS;
       
       $style_attr = '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;';
       $style_attr .= ' --bcb-btn-top: ' . esc_attr($copy_btn_offset_y) . 'px;';
+      $style_attr .= ' --bcb-btn-offset-x: ' . esc_attr($copy_btn_offset_x) . 'px;';
       $style_attr .= ' --bcb-btn-font-size: ' . esc_attr($copy_btn_font_size) . 'px;';
       if ( $copy_btn_bg !== '' ) {
         $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_bg) . ';';
