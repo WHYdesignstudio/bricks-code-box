@@ -238,6 +238,10 @@ JS;
       
       // Optional custom background color: if set, we use it for the whole block
       $bg_color_raw = $settings['background_color'] ?? '';
+      // Bricks color control kann als Array kommen (z.B. ['hex' => '#ff0000'])
+      if ( is_array($bg_color_raw) ) {
+        $bg_color_raw = (string) reset($bg_color_raw);
+      }
       $has_custom_bg = is_string($bg_color_raw) && $bg_color_raw !== '';
       $bg_color = $has_custom_bg ? sanitize_text_field($bg_color_raw) : '';
       if ( $has_custom_bg ) {
