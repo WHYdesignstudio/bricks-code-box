@@ -21,7 +21,8 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
       $this->control_groups['content']  = [ 'title' => esc_html__( 'Content', 'bricks-code-box' ), 'tab' => 'content' ];
       $this->control_groups['settings'] = [ 'title' => esc_html__( 'Settings', 'bricks-code-box' ), 'tab' => 'content' ];
       $this->control_groups['labels']   = [ 'title' => esc_html__( 'Button Labels', 'bricks-code-box' ), 'tab' => 'content' ];
-      $this->control_groups['style']    = [ 'title' => esc_html__( 'Style', 'bricks-code-box' ), 'tab' => 'style' ];
+      // Show style settings direkt im CONTENT-Tab, damit man nicht zwischen Tabs wechseln muss.
+      $this->control_groups['style']    = [ 'title' => esc_html__( 'Style', 'bricks-code-box' ), 'tab' => 'content' ];
     }
 
     public function set_controls() {
@@ -85,7 +86,7 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
       ];
       // Copy button style
       $this->controls['copy_btn_position'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button position', 'bricks-code-box' ),
         'type'  => 'select',
@@ -96,7 +97,7 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'default' => 'right',
       ];
       $this->controls['copy_btn_offset_y'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button offset (top, px)', 'bricks-code-box' ),
         'type'  => 'number',
@@ -104,7 +105,7 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'unit'  => 'px',
       ];
       $this->controls['copy_btn_offset_x'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button offset (side, px)', 'bricks-code-box' ),
         'type'  => 'number',
@@ -112,7 +113,7 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'unit'  => 'px',
       ];
       $this->controls['copy_btn_bg'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button background', 'bricks-code-box' ),
         'type'  => 'color',
@@ -120,21 +121,21 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'description' => esc_html__( 'Leave empty for transparent background.', 'bricks-code-box' ),
       ];
       $this->controls['copy_btn_color'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button text color', 'bricks-code-box' ),
         'type'  => 'color',
         'default' => '',
       ];
       $this->controls['copy_btn_border_color'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button border color', 'bricks-code-box' ),
         'type'  => 'color',
         'default' => '',
       ];
       $this->controls['copy_btn_font_size'] = [
-        'tab'   => 'style',
+        'tab'   => 'content',
         'group' => 'style',
         'label' => esc_html__( 'Copy button font size (px)', 'bricks-code-box' ),
         'type'  => 'number',
@@ -142,11 +143,11 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'unit'  => 'px',
       ];
       $this->controls['font_size'] = [
-        'tab'=>'style','group'=>'style','label'=>esc_html__( 'Font size (px)', 'bricks-code-box' ),
+        'tab'=>'content','group'=>'style','label'=>esc_html__( 'Font size (px)', 'bricks-code-box' ),
         'type'=>'number','default'=>14,'unit'=>'px',
       ];
       $this->controls['max_height'] = [
-        'tab'=>'style','group'=>'style','label'=>esc_html__( 'Max height (px)', 'bricks-code-box' ),
+        'tab'=>'content','group'=>'style','label'=>esc_html__( 'Max height (px)', 'bricks-code-box' ),
         'type'=>'number','default'=>400,'unit'=>'px',
         'description' => esc_html__( 'Set to 0 for no limit', 'bricks-code-box' ),
       ];
