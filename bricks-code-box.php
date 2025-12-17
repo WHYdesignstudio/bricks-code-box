@@ -4,7 +4,7 @@
  * Plugin Name: Bricks Code Box
  * Plugin URI:  https://github.com/WHYdesignstudio/bricks-code-box
  * Description: Adds a Code Box element to Bricks Builder with Prism.js syntax highlighting, copy button, line numbers, and optional title.
- * Version:     1.0.6
+ * Version:     1.0.7
  * Author:      Why Studio
  * Author URI:  https://why.studio/
  * Text Domain: bricks-code-box
