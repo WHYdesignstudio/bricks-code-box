@@ -362,4 +362,46 @@ JS;
       $style_attr .= ' --bcb-btn-offset-x: ' . esc_attr($copy_btn_offset_x) . 'px;';
       $style_attr .= ' --bcb-btn-font-size: ' . esc_attr($copy_btn_font_size) . 'px;';
       if ( $copy_btn_bg !== '' ) {
-        $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_
+        $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_bg) . ';';
+        $style_attr .= ' --bcb-btn-bg-hover: ' . esc_attr($copy_btn_bg) . ';';
+      }
+      if ( $copy_btn_color !== '' ) {
+        $style_attr .= ' --bcb-btn-color: ' . esc_attr($copy_btn_color) . ';';
+        $style_attr .= ' --bcb-btn-color-hover: ' . esc_attr($copy_btn_color) . ';';
+      }
+      if ( $copy_btn_border !== '' ) {
+        $style_attr .= ' --bcb-btn-border-color: ' . esc_attr($copy_btn_border) . ';';
+        $style_attr .= ' --bcb-btn-border-color-hover: ' . esc_attr($copy_btn_border) . ';';
+      }
+      if ( $has_custom_bg ) {
+        $style_attr .= ' --bcb-bg-color: ' . esc_attr($bg_color) . ';';
+      }
+
+      $this->set_attribute('_root', 'class', $root_classes);
+      $this->set_attribute('_root', 'style', $style_attr);
+      $this->set_attribute('_root', 'data-lang', esc_attr($language));
+      $this->set_attribute('_root', 'data-copy', $showCopy ? '1' : '0');
+      $this->set_attribute('_root', 'data-label-de', esc_attr(sanitize_text_field($settings['label_copy_de'] ?? '📋 Kopieren')));
+      $this->set_attribute('_root', 'data-done-de',  esc_attr(sanitize_text_field($settings['label_done_de']  ?? '✅ Kopiert!')));
+      $this->set_attribute('_root', 'data-label-en', esc_attr(sanitize_text_field($settings['label_copy_en'] ?? '📋 Copy')));
+      $this->set_attribute('_root', 'data-done-en',  esc_attr(sanitize_text_field($settings['label_done_en']  ?? '✅ Copied!')));
+
+      echo '<div ' . $this->render_attributes('_root') . '>';
+        if ( $show_filename && !empty($filename) ) {
+          echo '<div class="filename">' . esc_html($filename) . '</div>';
+        }
+        if ( $showCopy ) {
+          $locale = function_exists('determine_locale') ? determine_locale() : get_locale();
+          $is_en  = is_string($locale) && strpos(strtolower($locale), 'en') === 0;
+          $initialLabel = $is_en
+            ? sanitize_text_field($settings['label_copy_en'] ?? '📋 Copy')
+            : sanitize_text_field($settings['label_copy_de'] ?? '📋 Kopieren');
+          echo '<button class="copy-btn" type="button">' . esc_html($initialLabel) . '</button>';
+        }
+        $pre_classes = $lineNumbers ? 'line-numbers' : '';
+        echo '<pre class="' . esc_attr($pre_classes) . '"><code class="language-' . esc_attr($language) . '">' . esc_html($code) . '</code></pre>';
+        echo '<textarea class="bcb-code-src" hidden>' . esc_textarea($code) . '</textarea>';
+      echo '</div>';
+    }
+  }
+}
