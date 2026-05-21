@@ -21,7 +21,6 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
       $this->control_groups['content']  = [ 'title' => esc_html__( 'Content', 'bricks-code-box' ), 'tab' => 'content' ];
       $this->control_groups['settings'] = [ 'title' => esc_html__( 'Settings', 'bricks-code-box' ), 'tab' => 'content' ];
       $this->control_groups['labels']   = [ 'title' => esc_html__( 'Button Labels', 'bricks-code-box' ), 'tab' => 'content' ];
-      // Show style settings direkt im CONTENT-Tab, damit man nicht zwischen Tabs wechseln muss.
       $this->control_groups['style']    = [ 'title' => esc_html__( 'Style', 'bricks-code-box' ), 'tab' => 'content' ];
     }
 
@@ -39,26 +38,43 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         'default' => 'markup',
       ];
       $this->controls['theme'] = [
-        'tab' => 'content', 'group' => 'settings', 'label' => esc_html__( 'Prism theme', 'bricks-code-box' ),
+        'tab' => 'content', 'group' => 'settings', 'label' => esc_html__( 'Prism theme (Light)', 'bricks-code-box' ),
         'type' => 'select',
         'options' => [
-          'prism' => 'Default (light)',
-          'prism-coy' => 'Coy (light)',
+          'prism'               => 'Default (light)',
+          'prism-coy'           => 'Coy (light)',
           'prism-solarizedlight' => 'Solarized Light',
-          'prism-okaidia' => 'Okaidia (dark)',
-          'prism-tomorrow' => 'Tomorrow (dark)',
-          'prism-twilight' => 'Twilight (dark)',
-          'prism-funky' => 'Funky',
+          'prism-okaidia'       => 'Okaidia (dark)',
+          'prism-tomorrow'      => 'Tomorrow (dark)',
+          'prism-twilight'      => 'Twilight (dark)',
+          'prism-funky'         => 'Funky',
         ],
         'default' => 'prism',
       ];
+      $this->controls['theme_dark'] = [
+        'tab'     => 'content',
+        'group'   => 'settings',
+        'label'   => esc_html__( 'Prism theme (Dark Mode)', 'bricks-code-box' ),
+        'type'    => 'select',
+        'options' => [
+          ''                    => '— Same as Light —',
+          'prism'               => 'Default (light)',
+          'prism-coy'           => 'Coy (light)',
+          'prism-solarizedlight' => 'Solarized Light',
+          'prism-okaidia'       => 'Okaidia (dark)',
+          'prism-tomorrow'      => 'Tomorrow (dark)',
+          'prism-twilight'      => 'Twilight (dark)',
+          'prism-funky'         => 'Funky',
+        ],
+        'default' => 'prism-okaidia',
+      ];
       $this->controls['background_color'] = [
-        'tab' => 'content',
+        'tab'   => 'content',
         'group' => 'settings',
         'label' => esc_html__( 'Background color (optional)', 'bricks-code-box' ),
-        'type' => 'color',
+        'type'  => 'color',
         'default' => '',
-        'description' => esc_html__( 'Leave empty to use the Prism theme background. If set, this color is used for the whole code block.', 'bricks-code-box' ),
+        'description' => esc_html__( 'Leave empty to use the Prism theme background.', 'bricks-code-box' ),
       ];
       $this->controls['line_numbers'] = [
         'tab' => 'content','group' => 'settings','label' => esc_html__( 'Line numbers', 'bricks-code-box' ),
@@ -167,12 +183,17 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
     }
 
     public function enqueue_scripts() {
-      // Nur laden wenn noch nicht geladen (Performance-Optimierung)
-      if ( !wp_style_is('bcb-prism-theme', 'enqueued') ) {
-        $theme = isset($this->settings['theme']) ? sanitize_text_field($this->settings['theme']) : 'prism';
-        $allowed_themes = ['prism', 'prism-coy', 'prism-solarizedlight', 'prism-okaidia', 'prism-tomorrow', 'prism-twilight', 'prism-funky'];
-        $theme = in_array($theme, $allowed_themes) ? $theme : 'prism';
-        
+      $allowed_themes = ['prism', 'prism-coy', 'prism-solarizedlight', 'prism-okaidia', 'prism-tomorrow', 'prism-twilight', 'prism-funky'];
+
+      // --- Light theme ---
+      $theme = isset($this->settings['theme']) ? sanitize_text_field($this->settings['theme']) : 'prism';
+      $theme = in_array($theme, $allowed_themes) ? $theme : 'prism';
+
+      // --- Dark theme ---
+      $theme_dark_raw = isset($this->settings['theme_dark']) ? sanitize_text_field($this->settings['theme_dark']) : '';
+      $theme_dark     = ( $theme_dark_raw !== '' && in_array($theme_dark_raw, $allowed_themes) ) ? $theme_dark_raw : '';
+
+      if ( ! wp_style_is('bcb-prism-theme', 'enqueued') ) {
         $theme_url = 'https://cdn.jsdelivr.net/npm/prismjs/themes/' . $theme . '.min.css';
         wp_enqueue_style('bcb-prism-theme', $theme_url, [], '1.29.0');
         wp_enqueue_style('bcb-prism-linenumbers','https://cdn.jsdelivr.net/npm/prismjs/plugins/line-numbers/prism-line-numbers.min.css',['bcb-prism-theme'],'1.29.0');
@@ -181,11 +202,17 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         wp_enqueue_script('bcb-prism-linenumbers','https://cdn.jsdelivr.net/npm/prismjs/plugins/line-numbers/prism-line-numbers.min.js',['bcb-prism-core'],'1.29.0',true);
       }
 
-      // CSS nur einmal laden (Performance-Optimierung)
-      if ( !wp_style_is('bcb-code-box-inline', 'enqueued') ) {
-        // Layout & UX only – background/colors come entweder von:
-        // - Prism theme (Standard)
-        // - Einer optionalen Custom-Farbe (background_color)
+      // --- Dark theme stylesheet (only when a different dark theme is selected) ---
+      if ( $theme_dark !== '' && $theme_dark !== $theme ) {
+        if ( ! wp_style_is('bcb-prism-theme-dark', 'enqueued') ) {
+          $theme_dark_url = 'https://cdn.jsdelivr.net/npm/prismjs/themes/' . $theme_dark . '.min.css';
+          // Load the dark stylesheet but disable it immediately via JS – it will be
+          // activated by the dark-mode switcher script below.
+          wp_enqueue_style('bcb-prism-theme-dark', $theme_dark_url, ['bcb-prism-theme'], '1.29.0');
+        }
+      }
+
+      if ( ! wp_style_is('bcb-code-box-inline', 'enqueued') ) {
         $css = '.bcb-code-box-wrapper{position:relative;display:block;width:100%;box-sizing:border-box;overflow:auto;padding:1em;border-radius:8px;max-height:var(--bcb-max-height,400px)}'
           .'.bcb-code-box-wrapper.is-full{max-height:none;overflow:visible}'
           .'.bcb-code-box-wrapper pre{margin:0;width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}'
@@ -195,7 +222,6 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
           .'.bcb-code-box-wrapper .copy-btn:hover{background:var(--bcb-btn-bg-hover,transparent);border-color:var(--bcb-btn-border-color-hover,#666);color:var(--bcb-btn-color-hover,#666)}'
           .'.bcb-code-box-wrapper .filename{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.1);color:#666;padding:2px 8px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono",monospace;z-index:1}'
           .'.bcb-code-box-wrapper.has-filename .copy-btn{right:8px;top:8px}'
-          // Custom background: einfarbiger Block, Prism-Decor (BG, Shadow, Border) wird neutralisiert
           .'.bcb-code-box-wrapper.has-custom-bg,.bcb-code-box-wrapper.has-custom-bg pre[class*="language-"],.bcb-code-box-wrapper.has-custom-bg code[class*="language-"]{background:var(--bcb-bg-color,#f5f5f5)!important;background-image:none!important;box-shadow:none!important;border:none!important;outline:none!important}'
           .'.bcb-code-box-wrapper.has-custom-bg.line-numbers .line-numbers-rows > span:before{background:transparent!important;border:none!important;box-shadow:none!important}'
           .'.bcb-code-box-wrapper.has-custom-bg.line-numbers pre[class*="language-"]{padding-left:3.8em}';
@@ -204,12 +230,81 @@ if ( class_exists('\Bricks\Element') && ! class_exists('BCB_Element_Code_Box') )
         wp_add_inline_style('bcb-code-box-inline', $css);
       }
 
-      // JavaScript nur einmal laden (Performance-Optimierung)
-      if ( !wp_script_is('bcb-code-box-init', 'enqueued') ) {
+      if ( ! wp_script_is('bcb-code-box-init', 'enqueued') ) {
         $js = <<<JS
-(function(){function initCodeBox(box){var lang=box.getAttribute('data-lang')||'markup';var showCopy=box.getAttribute('data-copy')==='1';var codeEl=box.querySelector('code');var srcTextarea=box.querySelector('textarea.bcb-code-src');if(!codeEl)return;var initial=srcTextarea&&srcTextarea.value?srcTextarea.value:codeEl.textContent||codeEl.innerText||'';codeEl.className='language-'+lang;codeEl.textContent=initial;if(window.Prism){Prism.highlightElement(codeEl);}var btn=box.querySelector('button.copy-btn');if(btn&&showCopy){var pageLang=(document.documentElement.lang||'').toLowerCase();var isEN=pageLang.indexOf('en')===0;var label=isEN?(box.getAttribute('data-label-en')||'📋 Copy'):(box.getAttribute('data-label-de')||'📋 Kopieren');var labelDone=isEN?(box.getAttribute('data-done-en')||'✅ Copied!'):(box.getAttribute('data-done-de')||'✅ Kopiert!');if(!btn.textContent){btn.textContent=label;}btn.style.cursor='pointer';btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var textToCopy=(srcTextarea&&srcTextarea.value)||codeEl.innerText||codeEl.textContent||'';function showCopiedMessage(){var originalText=btn.textContent;btn.textContent=labelDone;setTimeout(function(){btn.textContent=originalText;},2000);}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(textToCopy).then(showCopiedMessage).catch(function(){fallbackCopy(textToCopy);showCopiedMessage();});}else{fallbackCopy(textToCopy);showCopiedMessage();}});}else if(btn){btn.style.display='none';}}function fallbackCopy(text){var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}function initAllCodeBoxes(){document.querySelectorAll('.bcb-code-box-wrapper').forEach(initCodeBox);}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initAllCodeBoxes);}else{initAllCodeBoxes();}if(window.bricksIsFrontend){document.addEventListener('bricks/frontend/init',initAllCodeBoxes);}})();
+(function(){
+  /* ── Code Box: init highlight + copy ── */
+  function initCodeBox(box){
+    var lang=box.getAttribute('data-lang')||'markup';
+    var showCopy=box.getAttribute('data-copy')==='1';
+    var codeEl=box.querySelector('code');
+    var srcTextarea=box.querySelector('textarea.bcb-code-src');
+    if(!codeEl)return;
+    var initial=srcTextarea&&srcTextarea.value?srcTextarea.value:codeEl.textContent||codeEl.innerText||'';
+    codeEl.className='language-'+lang;
+    codeEl.textContent=initial;
+    if(window.Prism){Prism.highlightElement(codeEl);}
+    var btn=box.querySelector('button.copy-btn');
+    if(btn&&showCopy){
+      var pageLang=(document.documentElement.lang||'').toLowerCase();
+      var isEN=pageLang.indexOf('en')===0;
+      var label=isEN?(box.getAttribute('data-label-en')||'📋 Copy'):(box.getAttribute('data-label-de')||'📋 Kopieren');
+      var labelDone=isEN?(box.getAttribute('data-done-en')||'✅ Copied!'):(box.getAttribute('data-done-de')||'✅ Kopiert!');
+      if(!btn.textContent){btn.textContent=label;}
+      btn.style.cursor='pointer';
+      btn.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
+        var textToCopy=(srcTextarea&&srcTextarea.value)||codeEl.innerText||codeEl.textContent||'';
+        function showCopiedMessage(){var originalText=btn.textContent;btn.textContent=labelDone;setTimeout(function(){btn.textContent=originalText;},2000);}
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(textToCopy).then(showCopiedMessage).catch(function(){fallbackCopy(textToCopy);showCopiedMessage();});}
+        else{fallbackCopy(textToCopy);showCopiedMessage();}
+      });
+    }else if(btn){btn.style.display='none';}
+  }
+
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');
+    ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);
+  }
+
+  function initAllCodeBoxes(){document.querySelectorAll('.bcb-code-box-wrapper').forEach(initCodeBox);}
+
+  /* ── Dark Mode theme switcher ── */
+  function applyDarkTheme(){
+    var isDark=document.documentElement.getAttribute('data-brx-theme')==='dark';
+    var lightLink=document.getElementById('bcb-prism-theme-css');
+    var darkLink=document.getElementById('bcb-prism-theme-dark-css');
+    if(!darkLink)return; // no separate dark theme registered – nothing to do
+    if(isDark){
+      if(lightLink)lightLink.disabled=true;
+      darkLink.disabled=false;
+    }else{
+      if(lightLink)lightLink.disabled=false;
+      darkLink.disabled=true;
+    }
+  }
+
+  // Watch for data-brx-theme attribute changes on <html>
+  if(window.MutationObserver){
+    var observer=new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        if(m.type==='attributes'&&m.attributeName==='data-brx-theme'){applyDarkTheme();}
+      });
+    });
+    observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-brx-theme']});
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){initAllCodeBoxes();applyDarkTheme();});
+  }else{
+    initAllCodeBoxes();applyDarkTheme();
+  }
+  if(window.bricksIsFrontend){document.addEventListener('bricks/frontend/init',function(){initAllCodeBoxes();applyDarkTheme();});}
+})();
 JS;
-        wp_register_script('bcb-code-box-init', '', [], '1.0.2', true);
+        wp_register_script('bcb-code-box-init', '', [], '1.0.3', true);
         wp_enqueue_script('bcb-code-box-init');
         wp_add_inline_script('bcb-code-box-init', $js);
       }
@@ -217,7 +312,6 @@ JS;
 
     public function render() {
       $settings   = $this->settings;
-      // Keep code exactly as entered; escaping happens at output (esc_html / esc_textarea)
       $code       = isset($settings['code']) ? (string) $settings['code'] : '';
       $language   = isset($settings['language']) ? sanitize_text_field($settings['language']) : 'markup';
       $lineNumbers= !empty($settings['line_numbers']);
@@ -227,8 +321,7 @@ JS;
       $full_height = !empty($settings['full_height']);
       $show_filename = !empty($settings['show_filename']);
       $filename   = isset($settings['filename']) ? sanitize_text_field($settings['filename']) : '';
-      
-      // Validiere Sprache gegen erlaubte Werte
+
       $allowed_languages = ['markup', 'javascript', 'php', 'css', 'java', 'python', 'sql', 'bash'];
       $language = in_array($language, $allowed_languages) ? $language : 'markup';
 
@@ -236,10 +329,8 @@ JS;
       if ( $lineNumbers ) { $root_classes[] = 'line-numbers'; }
       if ( $show_filename && !empty($filename) ) { $root_classes[] = 'has-filename'; }
       if ( $full_height ) { $root_classes[] = 'is-full'; }
-      
-      // Optional custom background color: if set, we use it for the whole block
+
       $bg_color_raw = $settings['background_color'] ?? '';
-      // Bricks color control kann als Array kommen (z.B. ['hex' => '#ff0000'])
       if ( is_array($bg_color_raw) ) {
         $bg_color_raw = (string) reset($bg_color_raw);
       }
@@ -248,72 +339,27 @@ JS;
       if ( $has_custom_bg ) {
         $root_classes[] = 'has-custom-bg';
       }
-      
-      // Copy button style variables
-      $copy_btn_position = isset($settings['copy_btn_position']) ? sanitize_text_field($settings['copy_btn_position']) : 'right';
-      $copy_btn_offset_y = isset($settings['copy_btn_offset_y']) ? max(0, intval($settings['copy_btn_offset_y'])) : 8;
-      $copy_btn_offset_x = isset($settings['copy_btn_offset_x']) ? max(0, intval($settings['copy_btn_offset_x'])) : 8;
+
+      $copy_btn_position  = isset($settings['copy_btn_position']) ? sanitize_text_field($settings['copy_btn_position']) : 'right';
+      $copy_btn_offset_y  = isset($settings['copy_btn_offset_y']) ? max(0, intval($settings['copy_btn_offset_y'])) : 8;
+      $copy_btn_offset_x  = isset($settings['copy_btn_offset_x']) ? max(0, intval($settings['copy_btn_offset_x'])) : 8;
       $copy_btn_font_size = isset($settings['copy_btn_font_size']) ? max(8, min(24, intval($settings['copy_btn_font_size']))) : 12;
 
-      // Bricks color controls können Arrays liefern – wir nehmen einfach den ersten String-Wert
       $copy_btn_bg_raw    = $settings['copy_btn_bg'] ?? '';
       $copy_btn_color_raw = $settings['copy_btn_color'] ?? '';
       $copy_btn_border_raw= $settings['copy_btn_border_color'] ?? '';
 
-      $copy_btn_bg = is_array($copy_btn_bg_raw) ? (string) reset($copy_btn_bg_raw) : (string) $copy_btn_bg_raw;
-      $copy_btn_color = is_array($copy_btn_color_raw) ? (string) reset($copy_btn_color_raw) : (string) $copy_btn_color_raw;
+      $copy_btn_bg     = is_array($copy_btn_bg_raw)     ? (string) reset($copy_btn_bg_raw)     : (string) $copy_btn_bg_raw;
+      $copy_btn_color  = is_array($copy_btn_color_raw)  ? (string) reset($copy_btn_color_raw)  : (string) $copy_btn_color_raw;
       $copy_btn_border = is_array($copy_btn_border_raw) ? (string) reset($copy_btn_border_raw) : (string) $copy_btn_border_raw;
 
       if ( $copy_btn_position === 'left' ) {
         $root_classes[] = 'copy-btn-left';
       }
-      
-      $style_attr = '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;';
+
+      $style_attr  = '--bcb-font-size: ' . esc_attr($font_size) . 'px; --bcb-max-height: ' . esc_attr($max_height) . 'px;';
       $style_attr .= ' --bcb-btn-top: ' . esc_attr($copy_btn_offset_y) . 'px;';
       $style_attr .= ' --bcb-btn-offset-x: ' . esc_attr($copy_btn_offset_x) . 'px;';
       $style_attr .= ' --bcb-btn-font-size: ' . esc_attr($copy_btn_font_size) . 'px;';
       if ( $copy_btn_bg !== '' ) {
-        $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_bg) . ';';
-        // leichte Hover-Variante andeuten (kann der User bei Bedarf überschreiben)
-        $style_attr .= ' --bcb-btn-bg-hover: ' . esc_attr($copy_btn_bg) . ';';
-      }
-      if ( $copy_btn_color !== '' ) {
-        $style_attr .= ' --bcb-btn-color: ' . esc_attr($copy_btn_color) . ';';
-        $style_attr .= ' --bcb-btn-color-hover: ' . esc_attr($copy_btn_color) . ';';
-      }
-      if ( $copy_btn_border !== '' ) {
-        $style_attr .= ' --bcb-btn-border-color: ' . esc_attr($copy_btn_border) . ';';
-        $style_attr .= ' --bcb-btn-border-color-hover: ' . esc_attr($copy_btn_border) . ';';
-      }
-      if ( $has_custom_bg ) {
-        $style_attr .= ' --bcb-bg-color: ' . esc_attr($bg_color) . ';';
-      }
-      
-      $this->set_attribute('_root', 'class', $root_classes);
-      $this->set_attribute('_root', 'style', $style_attr);
-      $this->set_attribute('_root', 'data-lang', esc_attr($language));
-      $this->set_attribute('_root', 'data-copy', $showCopy ? '1' : '0');
-      $this->set_attribute('_root', 'data-label-de', esc_attr(sanitize_text_field($settings['label_copy_de'] ?? '📋 Kopieren')));
-      $this->set_attribute('_root', 'data-done-de', esc_attr(sanitize_text_field($settings['label_done_de'] ?? '✅ Kopiert!')));
-      $this->set_attribute('_root', 'data-label-en', esc_attr(sanitize_text_field($settings['label_copy_en'] ?? '📋 Copy')));
-      $this->set_attribute('_root', 'data-done-en', esc_attr(sanitize_text_field($settings['label_done_en'] ?? '✅ Copied!')));
-
-      echo '<div ' . $this->render_attributes('_root') . '>';
-        if ( $show_filename && !empty($filename) ) {
-          echo '<div class="filename">' . esc_html($filename) . '</div>';
-        }
-        if ( $showCopy ) {
-          $locale = function_exists('determine_locale') ? determine_locale() : get_locale();
-          $is_en  = is_string($locale) && strpos(strtolower($locale), 'en') === 0;
-          $initialLabel = $is_en ? sanitize_text_field($settings['label_copy_en'] ?? '📋 Copy') : sanitize_text_field($settings['label_copy_de'] ?? '📋 Kopieren');
-          echo '<button class="copy-btn" type="button">' . esc_html($initialLabel) . '</button>';
-        }
-        $pre_classes = $lineNumbers ? 'line-numbers' : '';
-        echo '<pre class="' . esc_attr($pre_classes) . '"><code class="language-' . esc_attr($language) . '">' . esc_html($code) . '</code></pre>';
-        echo '<textarea class="bcb-code-src" hidden>' . esc_textarea($code) . '</textarea>';
-      echo '</div>';
-    }
-  }
-}
-
-
+        $style_attr .= ' --bcb-btn-bg: ' . esc_attr($copy_btn_
